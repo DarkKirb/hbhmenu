@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+#include "audio.hpp"
 ROMfs rom;
 void printfile(string path)
 {
@@ -23,6 +24,7 @@ int main(int argc, char **argv) {
         u8* fbTop=gfxGetFramebuffer(GFX_TOP, GFX_LEFT, NULL, NULL);
         cout << "Initializing Homebrew hmenu" << endl;
         Config cfg(&rom, "config.cfg");
+        Audio audio(rom);
         uint32_t fd=rom.open(cfg.config["topScreenFlash"]);
         rom.readTo(fd,rom.size(fd),fbTop);
         rom.close(fd);
@@ -31,21 +33,7 @@ int main(int argc, char **argv) {
         uint8_t *audioBuffer=nullptr;
         size_t audioSize=0;
         if(cfg.config["playBGAudio"]=="true") {
-            srvInit();
-            aptInit();
-            cout << "Loading audio track" << endl;
-            csndInit();
-            csnd_inited=true;
-            fd=rom.open(cfg.config["BGAudioPath"]);
-            audioSize=rom.size(fd);
-            audioBuffer=(uint8_t*)linearAlloc(audioSize);
-            rom.readTo(fd, audioSize,audioBuffer);
-            rom.close(fd);
-            /*if(cfg.config["BGAudioFormat"]=="DSPADPCM") 
-                csndPlaySound(8, SOUND_FORMAT_ADPCM | SOUND_REPEAT, 48000, 1, 0, audioBuffer, audioBuffer, audioSize);
-            else*/
-                csndPlaySound(8, SOUND_FORMAT_16BIT | SOUND_REPEAT, 22050, 1, 0, audioBuffer, audioBuffer, audioSize);
-            
+            audio.play(cfg.config["BGAudioPath"]);            
         }
         while(aptMainLoop()) {
             hidScanInput();
@@ -57,17 +45,6 @@ int main(int argc, char **argv) {
             gspWaitForVBlank();
         }
         gfxExit();
-        if(csnd_inited) {
-            csndExecCmds(true);
-            CSND_SetPlayState(0x8, 0);
-            GSPGPU_FlushDataCache(audioBuffer, audioSize);
-            csndExit();
-            linearFree(audioBuffer);
-            aptExit();
-            srvExit();
-        }
-        if(audioBuffer)
-            delete[] audioBuffer;
         return 0;
     }catch(...) {
         puts("En error occurred...\n");
