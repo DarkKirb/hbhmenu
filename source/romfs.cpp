@@ -6,12 +6,12 @@
 ROMfs::ROMfs() {
     Result rc = romfsInit();
     if(rc) {
-        //cout << "Romfs init: " << rc << endl;
+        cout << "Romfs init: " << rc << endl;
         throw nullptr;
     }
     rc = sdmcInit();
     if(rc) {
-        //cout << "sdmc init: " << rc << " (Not critical)" << endl;
+        cout << "sdmc init: " << rc << " (Not critical)" << endl;
     }
 }
 ROMfs::~ROMfs() {
@@ -27,6 +27,8 @@ auto ROMfs::open(string fn) -> uint32_t {
     if(!f) { //Fall back to the romfs file.
         fname=string("romfs:/")+fn;
         f=fopen(fname.c_str(),"r");
+    } else {
+        cout << "Reading " << fn << " from SD card." << endl;
     }
     if(!f)
         throw f;
