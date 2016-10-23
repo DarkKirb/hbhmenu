@@ -1,15 +1,6 @@
 #include "audio.hpp"
 #include <iostream>
 #include <cstring>
-bool threadFinished=false;
-auto audioThread(void * stream) -> void {
-    cout << "Entering thread" << endl;
-    Audio *aud=(Audio*)stream;
-    csndPlaySound(8, SOUND_FORMAT_16BIT | SOUND_REPEAT, 22050, 1, 0, aud->stream, aud->stream, aud->size);
-    cout << "Exiting thread" << endl;
-    threadFinished=true;
-    //threadExit(0);
-}
 Audio::Audio(ROMfs &rom): rom(rom) {
     srvInit();
     aptInit();
@@ -35,10 +26,7 @@ auto Audio::play(string file) -> void {
     rom.readTo(fd, size,stream);
     rom.close(fd);
     playing=true;
-    threadFinished=false;
     csndPlaySound(8, SOUND_FORMAT_16BIT | SOUND_REPEAT, 22050, 1, 0, stream, stream, size);
-    //audioThread((void*)this);
-    //threadCreate(::audioThread, (void*)this, 0x10000, 0x28, 0, true);
 }
 auto Audio::stop() -> void {
     if(!playing)
@@ -50,10 +38,4 @@ auto Audio::stop() -> void {
     linearFree(stream);
     stream=nullptr;
     playing=false;
-    /*for(int i=0;i<65536;i++) {
-        if(threadFinished) {
-            cout << "Thread ended..." << endl;
-            break;
-        }
-    }*/
 }

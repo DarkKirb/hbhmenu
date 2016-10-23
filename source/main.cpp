@@ -35,12 +35,22 @@ int main(int argc, char **argv) {
         if(cfg.config["playBGAudio"]=="true") {
             audio.play(cfg.config["BGAudioPath"]);            
         }
+        cout << "Press A to start homebrewlauncher loader" << endl;
         while(aptMainLoop()) {
             hidScanInput();
             if(hidKeysDown() & KEY_START) {
                 break;
             }
-    
+            if(hidKeysDown() & KEY_A) {
+                Result res=0;
+                if(R_SUCCEEDED(res=APT_PrepareToDoApplicationJump(0,0x000400000D921E00ull,MEDIATYPE_SD))) {
+                    uint8_t param[0x300];
+                    uint8_t hmac[0x20];
+                    res = APT_DoApplicationJump(param, sizeof(param), hmac);
+                } else {
+                    cout << "Couldn't launch hblauncher loader ("<<(u32)res<<")"<<endl;
+                }
+            }
             gfxFlushBuffers();
             gspWaitForVBlank();
         }
